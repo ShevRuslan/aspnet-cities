@@ -1,34 +1,51 @@
 ﻿class GoogleMap {
     constructor() {
-        google.maps.visualRefresh = true;
         this.init();
+        this.getAllCities();
     }
     init = () => {
         google.maps.visualRefresh = true;
-        // установка основных координат
-        var Moscow = new google.maps.LatLng(55.752622, 37.617567);
-
-        // Установка общих параметров отображения карты, как масштаб, центральная точка и тип карты
-        var mapOptions = {
-            zoom: 15,
+        const Moscow = new google.maps.LatLng(55.752622, 37.617567);
+        const mapOptions = {
+            zoom: 5,
             center: Moscow,
             mapTypeId: google.maps.MapTypeId.G_NORMAL_MAP
         };
 
-        // Встраиваем гугл-карты в элемент на странице и получаем объект карты
-        var map = new google.maps.Map(document.getElementById("canvas"), mapOptions);
+        this.map = new google.maps.Map(document.getElementById("canvas"), mapOptions);
 
-        // Настраиваем красный маркер, который будет использоваться для центральной точки
-        var myLatlng = new google.maps.LatLng(55.752622, 37.617567);
+        const myLatlng = new google.maps.LatLng(55.752622, 37.617567);
 
-        var marker = new google.maps.Marker({
+        new google.maps.Marker({
             position: myLatlng,
-            map: map,
-            title: 'Станции метро'
+            map: this.map,
         });
 
-        // Берем для маркера иконку с сайта google
-        marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png')
+    }
+    getAllCities = async () => {
+        const response = await fetch("/api/cities");
+        const cities = await response.json();
+        cities.forEach(city => {
+            const cityPosition = new google.maps.LatLng(city.coords.lat, city.coords.lon);
+
+            const marker = new google.maps.Marker({
+                position: cityPosition,
+                map: this.map,
+                title: city.name
+            });
+            // Для каждого объекта добавляем доп. информацию, выводимую в отдельном окне
+            const infowindow = new google.maps.InfoWindow({
+                content: `<div class='name'><h2>${city.name}</h2><div><h4>Население:
+                    ${city.population}</h4></div><div><h4>Округ: ${city.district}</h4></div><div><h4>Область: ${city.subject}</h4></div></div>`
+            });
+
+            // обработчик нажатия на маркер объекта
+            google.maps.event.addListener(marker, 'click', function () {
+                infowindow.open(this.map, marker);
+            });
+            marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png')
+        })
+
     }
 }
 new GoogleMap();
