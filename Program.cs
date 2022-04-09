@@ -16,9 +16,11 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
 app.UseRouting();
 app.UseEndpoints(endpoints => {
     endpoints.MapControllers();
 });
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.UseHttpsRedirection();
 app.Run();
